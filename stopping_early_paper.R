@@ -36,14 +36,16 @@ sim <- tibble(
 bks <- seq(min(sim$bf), max(sim$bf), by = 100)
 bks <- c(0, 0.00001, 0.0001, 0.001, 0.01, 0.1, 1, 2.1, 10, 100, 1000, 10000) 
 
-ggplot(sim, aes(x = bf,
+p <- ggplot(sim, aes(x = bf,
                 fill = test)) +
-  geom_histogram(alpha = 0.3,
-                 position = "identity") +
-  scale_x_log10(breaks = bks,
-                labels = bks) +
-  theme_bw()
-  
+       geom_histogram(alpha = 0.3,
+                      position = "identity") +
+       scale_x_log10(breaks = bks,
+                     labels = bks) +
+       theme_bw()
+
+ggsave('histogrames.png', p, 'png') 
+
 summary(sim$bf)
 
 
