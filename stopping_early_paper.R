@@ -73,7 +73,8 @@ stop_early <- function(max_N, delta, true_mean, true_sd, threshold) {
 threshold <- 9
 
 # Simulate
-# Half of the runs with a hypothesis of 0 and then with 0.2
+# Half of the runs with a true mean of 0 (control) 
+# and the other half  with 0.2 the test
 simulations_0 <- unlist(replicate(n = runs / 2,
                                   stop_early(max_N = max_N,
                                              delta = delta,
@@ -88,6 +89,7 @@ simulations_1 <- unlist(replicate(n = runs / 2,
                                              true_sd = true_sd,
                                              threshold = threshold2)))
 
+# Plot two histograms with the samples coming from the test and the control
 sim2 <- tibble(
           se_simulations = unlist(c(simulations_0, simulations_1)),
           group = c(rep("control", runs / 2), rep("test", runs / 2)))
