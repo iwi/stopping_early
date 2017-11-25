@@ -11,7 +11,6 @@ delta <- 0.2
 runs <- 10000
 true_mean <- 0
 true_sd <- 1
-threshold <- 9
 
 simulation <- function(N, true_mean, true_sd) {
     x_0 <- rnorm(n = N, mean = true_mean, sd = true_sd)
@@ -51,26 +50,54 @@ p <-
 ggsave('histogrames.png', p, 'png') 
 
 
+# Simulate runs where we're stopping early
+# Stopping based on a bayes factor larger than the threshold
+stop_early <- function(max_N, delta, true_mean, true_sd, threshold) {
+  # simulate all normal values
+  x <- rnorm(n = max_N, mean = true_mean, sd = true_sd)
 
-stop_early <- function(max_N, delta, true_mean, true_sd, threshold,
-                       hypothesis_mean) {
-  x <- rnorm(n = max_N, mean = hypothesis_mean, sd = true_sd)
+  # use the mean at each iteration to calculate the bayes factor
+  # and compare it with the threshold to stop early if necessary.
   for (i in 1:max_N){
-    bf <- bayes_factor(i, delta, mean(x[1:i]))
-    if (bf > threshold) {
-      return(i)
+    k <- bayes_factor(i, delta, mean(x[1:i]))
+    if (k > threshold) {
+      stop_time <- i
+      return(stop_time)
     }
   }
+  stop_time <- i
+  return(stop_time)
 }
 
-simulations <- 
-stop_early(1000, 0, 0, 1, 9)
+# Define the bayes factor threshold
+threshold <- 9
 
-simulations_0 <- unlist(replicate(n = runs / 2, stop_early(max_N, delta, true_mean,
-                                                  true_sd, threshold, 0)))
+# Simulate
+# Half of the runs with a hypothesis of 0 and then with 0.2
+simulations_0 <- unlist(replicate(n = runs / 2,
+                                  stop_early(max_N = max_N,
+                                             delta = delta,
+                                             true_mean = true_mean,
+                                             true_sd = true_sd,
+                                             threshold = threshold)))
 
-simulations_1 <- unlist(replicate(n = runs / 2, stop_early(max_N, delta, true_mean,
-                                                  true_sd, threshold, 0.2)))
+simulations_1 <- unlist(replicate(n = runs / 2,
+                                  stop_early(max_N = max_N,
+                                             delta = delta,
+                                             true_mean = true_mean + delta,
+                                             true_sd = true_sd,
+                                             threshold = threshold2)))
 
-hist(simulations_1)
-hist(simulations_0)
+sim2 <- tibble(
+          se_simulations = unlist(c(simulations_0, simulations_1)),
+          group = c(rep("control", runs / 2), rep("test", runs / 2)))
+
+p2 <-
+  ggplot(sim2, aes(x = se_simulations,
+                  fill = group)) +
+    geom_histogram(alpha = 0.3,
+                   position = "identity") +
+    scale_x_log10(breaks = bks,
+                  labels = bks) +
+    theme_bw()
+
